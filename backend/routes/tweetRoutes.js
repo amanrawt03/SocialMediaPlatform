@@ -1,8 +1,15 @@
-// const express = require('express');
-// const router = express.Router();
-// const { createTweets } = require('../controllers/tweetsController');
-// const protectRoute   = require('../middlewares/auth');
+import express from "express";
+import { getAllTweets, createTweets, deleteTweets, commentOnPost, likeUnlikePost , getAllLikedPosts, getFollowingTweets, getUserPosts} from "../controllers/tweetsController.js";
+import protectRoute from "../middlewares/auth.js";
+const router = express.Router();
 
-// router.post('/create', protectRoute, createTweets);
+router.get("/", protectRoute, getAllTweets);
+router.get("/user/:username", protectRoute, getUserPosts);
+router.get("/followingTweets", protectRoute, getFollowingTweets);
+router.get("/likedPosts", protectRoute, getAllLikedPosts);
+router.post("/create", protectRoute, createTweets);
+router.delete("/:id", protectRoute, deleteTweets);
+router.post("/comment/:id", protectRoute, commentOnPost);
+router.post("/like/:id", protectRoute, likeUnlikePost);
 
-// module.exports = router;
+export default router;
