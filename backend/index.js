@@ -7,6 +7,7 @@ import connectDB from "./config/db.js";
 import userRoutes from "./routes/userRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import tweetRoutes from "./routes/tweetRoutes.js";
+import notifyRoutes from "./routes/notifyRoutes.js";
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/tweets", tweetRoutes);
+app.use("/api/notification", notifyRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
