@@ -84,7 +84,8 @@ export const followUnfollowUser = async (req, res) => {
 };
 
 export const updateUserProflie = async (req, res) => {
-  const { fullname, username, oldPassword, newPassword, bio, link , email} = req.body;
+  const { fullName, username, oldPassword, newPassword, bio, link, email } =
+    req.body;
   let { profileImg, coverImg } = req.body;
   const userId = req.user._id;
   try {
@@ -123,7 +124,7 @@ export const updateUserProflie = async (req, res) => {
       user.coverImg = uploadedResponse.secure_url;
     }
 
-    user.fullname = fullname || user.fullname;
+    user.fullName = fullName || user.fullName;
     user.username = username || user.username;
     user.email = email || user.email;
     user.bio = bio || user.bio;
@@ -131,7 +132,7 @@ export const updateUserProflie = async (req, res) => {
     user.profileImg = profileImg || user.profileImg;
     user.coverImg = coverImg || user.coverImg;
 
-    user = await user.save()
+    user = await user.save();
   } catch (error) {
     console.error(error.message);
     return res.status(500).json({ message: "Server error", error });

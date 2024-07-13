@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const UserSchema = new mongoose.Schema(
   {
-    fullname: {
+    fullName: {
       type: String,
       required: true,
     },
@@ -26,8 +26,8 @@ const UserSchema = new mongoose.Schema(
     following: [
       { type: mongoose.Schema.Types.ObjectId, ref: "User", default: [] },
     ],
-    likedTweets :[
-      { type: mongoose.Schema.Types.ObjectId, ref: "Tweet", default: []},
+    likedTweets: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "Tweet", default: [] },
     ],
     profileImg: {
       type: String,
