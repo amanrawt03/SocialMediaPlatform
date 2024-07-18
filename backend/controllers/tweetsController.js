@@ -14,11 +14,8 @@ export const getAllTweets = async (req, res) => {
       .populate({
         path: "comments.user",
         select: "-password",
-      })
-      .populate({
-        path: "likes.user",
-        select: "-password",
       });
+
     if (tweets.length === 0) return res.status(200).json([]);
     return res.status(200).json(tweets);
   } catch (err) {
@@ -60,8 +57,7 @@ export const createTweets = async (req, res) => {
 
 export const deleteTweets = async (req, res) => {
   try {
-    const { id } = req.params;
-    const tweet = await Tweet.findById(id);
+    const tweet = await Tweet.findById(req.params.id);
     if (!tweet) return res.status(404).json({ error: "Tweet Not Found" });
 
     if (tweet.img) {
@@ -69,7 +65,7 @@ export const deleteTweets = async (req, res) => {
         tweet.img.split("/").pop().split(".")[0]
       );
     }
-    await Tweet.findByIdAndDelete(id);
+    await Tweet.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: "Tweet Deleted" });
   } catch (err) {
     res
@@ -81,27 +77,29 @@ export const deleteTweets = async (req, res) => {
 
 export const commentOnPost = async (req, res) => {
   try {
-    const { text } = req.body;
-    const tweetID = req.params.id;
-    const tweet = await Tweet.findById(tweetID);
-    if (!tweet) return res.status(404).json({ message: "Tweet Not Found" });
+		const { text } = req.body;
+		const postId = req.params.id;
+		const userId = req.user._id;
 
-    const userId = req.user._id;
+		if (!text) {
+			return res.status(400).json({ error: "Text field is required" });
+		}
+		const post = await Tweet.findById(postId);
 
-    if (!text)
-      return res
-        .status(404)
-        .json({ message: "You must type something to comment" });
-    const comment = { user: userId, text };
-    tweet.comments.push(comment);
-    await tweet.save();
-    res.status(200).json(tweet);
-  } catch (err) {
-    res
-      .status(500)
-      .json({ error: "An error occurred while commenting on the tweet" });
-    console.log(err);
-  }
+		if (!post) {
+			return res.status(404).json({ error: "Post not found" });
+		}
+
+		const comment = { user: userId, text };
+
+		post.comments.push(comment);
+		await post.save();
+
+		res.status(200).json(post);
+	} catch (error) {
+		console.log("Error in commentOnPost controller: ", error);
+		res.status(500).json({ error: "Internal server error" });
+	}
 };
 
 export const likeUnlikePost = async (req, res) => {
@@ -109,64 +107,62 @@ export const likeUnlikePost = async (req, res) => {
     const userId = req.user._id;
     const tweetID = req.params.id;
     const tweet = await Tweet.findById(tweetID);
-    if (!tweet) return res.status(404).json({ message: "Tweet Not Found" });
+    if (!tweet) {
+      return res.status(404).json({ message: "Tweet Not Found" });}
 
-    const userLikeIndex = tweet.likes.findIndex(
-      (like) => like && like.user && like.user.toString() === userId.toString()
-    );
+    const userLikedPost = tweet.likes.includes(userId);
 
-    if (userLikeIndex > -1) {
-      // User already liked the tweet, so unlike it
-      tweet.likes.splice(userLikeIndex, 1);
-      await User.updateOne(
-        { _id: userId },
-        { $pull: { likedTweets: tweetID } }
+    if (userLikedPost) {
+      await Tweet.updateOne({ _id: tweetID }, { $pull: { likes: userId } });
+      await User.updateOne({ _id: userId }, { $pull: { likedTweets: tweetID } });
+
+      const updatedLikes = tweet.likes.filter(
+        (id) => id.toString() !== userId.toString()
       );
+      res.status(200).json(updatedLikes);
     } else {
-      // User hasn't liked the tweet yet, so like it
-      tweet.likes.push({ likedStatus: true, user: userId });
-      await User.updateOne(
-        { _id: userId },
-        { $push: { likedTweets: tweetID } }
-      );
+      // Like post
+      tweet.likes.push(userId);
+      await User.updateOne({ _id: userId }, { $push: { likedTweets: tweetID } });
+      await tweet.save();
 
       const notification = new Notify({
         from: userId,
         to: tweet.user,
         type: "like",
-        read: false,
       });
-
       await notification.save();
-    }
 
-    await tweet.save();
-    res.status(200).json(tweet);
+      const updatedLikes = tweet.likes;
+      res.status(200).json(updatedLikes);
+    }
   } catch (err) {
-    res.status(500).json({ error: "An error occurred while liking the tweet" });
-    console.log(err);
+    console.log("Error in likeUnlikePost controller: ", err);
+		res.status(500).json({ error: "Internal server error" });
   }
 };
 
-export const getAllLikedPosts = async (req, res) => {
-  try {
-    const userId = req.user._id;
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ error: "User not found" });
-    const likedTweets = await Tweet.find({ _id: { $in: user.likedTweets } })
-      .populate({
-        path: "user",
-        select: "-password",
-      })
-      .populate({
-        path: "comments.user",
-        select: "-password",
-      });
-    res.status(200).json(likedTweets);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-    console.log(err);
-  }
+export const getLikedPosts = async (req, res) => {
+	const userId = req.params.id;
+	try {
+		const user = await User.findById(userId);
+		if (!user) return res.status(404).json({ error: "User not found" });
+
+		const likedPosts = await Tweet.find({ _id: { $in: user.likedTweets } })
+			.populate({
+				path: "user",
+				select: "-password",
+			})
+			.populate({
+				path: "comments.user",
+				select: "-password",
+			});
+
+		res.status(200).json(likedPosts);
+	} catch (error) {
+		console.log("Error in getLikedPosts controller: ", error);
+		res.status(500).json({ error: "Internal server error" });
+	}
 };
 
 export const getFollowingTweets = async (req, res) => {
@@ -193,24 +189,23 @@ export const getFollowingTweets = async (req, res) => {
 };
 
 export const getUserPosts = async (req, res) => {
-  
   try {
-    const {username}= req.params;                                   
-    const user = await User.findOne({username});
-    if(!user) return res.status(404).json({error: "User donot exist"})
-    
-    const userTweets = await Tweet.find({user :user._id})  
-    .sort({created: -1}).populate({
-      path: "user",
-      select: "-password",
-    }).
-    populate({
-      path: "comments.user",
-      select: "-password",
-    })
+    const { username } = req.params;
+    const user = await User.findOne({ username });
+    if (!user) return res.status(404).json({ error: "User donot exist" });
 
-    return res.status(200).json(userTweets)
- 
+    const userTweets = await Tweet.find({ user: user._id })
+      .sort({ created: -1 })
+      .populate({
+        path: "user",
+        select: "-password",
+      })
+      .populate({
+        path: "comments.user",
+        select: "-password",
+      });
+
+     res.status(200).json(userTweets);
   } catch (err) {
     res.status(500).json({ error: err.message });
     console.log(err);

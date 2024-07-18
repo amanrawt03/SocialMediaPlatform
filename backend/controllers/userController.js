@@ -10,10 +10,10 @@ export const getUserProfile = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User Not Found" });
     }
-    return res.status(201).json(user);
+    return res.status(200).json(user);
   } catch (error) {
-    console.error(error.message);
-    return res.status(500).json({ message: "Server error", error });
+    console.log("Error in getUserProfile: ", error.message);
+		res.status(500).json({ error: error.message });
   }
 };
 
@@ -50,7 +50,7 @@ export const followUnfollowUser = async (req, res) => {
     if (id === req.user._id.toString()) {
       return res
         .status(400)
-        .json({ error: "User cannot follow/unfollow themselves" });
+        .json({ error: "User cannot follow/unfollow yourself" });
     }
 
     if (!currentUser || !otherUser) {
@@ -68,10 +68,9 @@ export const followUnfollowUser = async (req, res) => {
       await User.findByIdAndUpdate(id, { $push: { followers: req.user._id } });
       await User.findByIdAndUpdate(req.user._id, { $push: { following: id } });
       const notification = new Notify({
-        from: req.user._id,
-        to: id,
         type: "follow",
-        read: false,
+        from: req.user._id,
+        to: otherUser._id,
       });
 
       await notification.save();
@@ -104,24 +103,20 @@ export const updateUserProflie = async (req, res) => {
 
     if (profileImg) {
       if (user.profileImg) {
-        await cloudinary.uploader.destroy(
-          user.profileImg.split("/").pop().split(".")[0]
-        );
+        await cloudinary.uploader.destroy(user.profileImg.split("/").pop().split(".")[0]);
       }
 
       const uploadedResponse = await cloudinary.uploader.upload(profileImg);
-      user.profileImg = uploadedResponse.secure_url;
+      profileImg = uploadedResponse.secure_url;
     }
 
     if (coverImg) {
       if (user.coverImg) {
-        await cloudinary.uploader.destroy(
-          user.coverImg.split("/").pop().split(".")[0]
-        );
+        await cloudinary.uploader.destroy(user.coverImg.split("/").pop().split(".")[0]);
       }
 
       const uploadedResponse = await cloudinary.uploader.upload(coverImg);
-      user.coverImg = uploadedResponse.secure_url;
+      coverImg = uploadedResponse.secure_url;
     }
 
     user.fullName = fullName || user.fullName;
@@ -133,6 +128,9 @@ export const updateUserProflie = async (req, res) => {
     user.coverImg = coverImg || user.coverImg;
 
     user = await user.save();
+    user.password = null;
+
+		return res.status(200).json(user);
   } catch (error) {
     console.error(error.message);
     return res.status(500).json({ message: "Server error", error });

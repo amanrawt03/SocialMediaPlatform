@@ -22,8 +22,8 @@ const TweetSchema = new mongoose.Schema({
   
   likes: [
     {
-      likedStatus: { type: Boolean, default: false },
-      user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
   ],
   createdAt: {

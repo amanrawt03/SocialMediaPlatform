@@ -1,6 +1,8 @@
-import { useState } from "react";
-
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import useUpdateProfile from "../../hooks/useUpdateProfile";
 const EditProfileModal = () => {
+  const {data: authUser} = useQuery({})
   const [formData, setFormData] = useState({
     fullName: "",
     username: "",
@@ -10,10 +12,24 @@ const EditProfileModal = () => {
     newPassword: "",
     currentPassword: "",
   });
-
+  const { updateProfile, isUploading } = useUpdateProfile();
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
+  useEffect(() => {
+		if (authUser) {
+			setFormData({
+				fullName: authUser.fullName,
+				username: authUser.username,
+				email: authUser.email,
+				bio: authUser.bio,
+				link: authUser.link,
+				newPassword: "",
+				currentPassword: "",
+			});
+		}
+	}, [authUser]);
 
   return (
     <>
@@ -32,7 +48,7 @@ const EditProfileModal = () => {
             className="flex flex-col gap-4"
             onSubmit={(e) => {
               e.preventDefault();
-              alert("Profile updated successfully");
+              updateProfile(formData);
             }}
           >
             <div className="flex flex-wrap gap-2">
@@ -97,7 +113,7 @@ const EditProfileModal = () => {
               onChange={handleInputChange}
             />
             <button className="btn btn-primary rounded-full btn-sm text-white">
-              Update
+              {isUploading ? "Uploading..." : "Upload"}
             </button>
           </form>
         </div>
