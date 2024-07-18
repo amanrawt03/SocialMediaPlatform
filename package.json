@@ -4,9 +4,10 @@
   "description": "",
   "main": "backend/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon backend/index.js"
-  },
+  "dev": "cross-env NODE_ENV=development nodemon backend/index.js",
+  "start": "cross-env NODE_ENV=production node backend/index.js",
+  "build": "npm install && npm install --prefix frontend && npm run build --prefix frontend"
+},
   "keywords": [],
   "author": "",
   "type": "module",
@@ -23,5 +24,8 @@
     "mongoose": "^8.4.3",
     "router": "^1.3.8",
     "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3"
   }
 }

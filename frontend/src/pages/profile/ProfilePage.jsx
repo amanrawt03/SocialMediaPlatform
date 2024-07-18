@@ -6,7 +6,6 @@ import Posts from "../../components/common/Posts";
 import ProfileHeaderSkeleton from "../../components/skeletons/ProfileHeaderSkeleton";
 import EditProfileModal from "./EditProfileModal";
 import formatMemberSinceDate from "../../utils/date/index";
-import { POSTS } from "../../utils/db/dummy";
 import useFollow from "../../hooks/useFollow";
 
 import { FaArrowLeft } from "react-icons/fa6";
@@ -91,9 +90,9 @@ const ProfilePage = () => {
                 </Link>
                 <div className="flex flex-col">
                   <p className="font-bold text-lg">{user?.fullName}</p>
-                  <span className="text-sm text-slate-500">
+                  {/* <span className="text-sm text-slate-500">
                     {POSTS?.length} posts
-                  </span>
+                  </span> */}
                 </div>
               </div>
               {/* COVER IMG */}
