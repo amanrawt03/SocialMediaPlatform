@@ -1,4 +1,3 @@
-import path from 'path'
 import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
@@ -18,7 +17,6 @@ cloudinary.config({
 });
 const app = express();
 const port = 3000;
-const __dirname = path.resolve()
 connectDB();
 
 app.use(express.json({ limit: "5mb" })); //the limit shouldn't be too large because of Dos attacks
@@ -31,13 +29,6 @@ app.use("/api/users", userRoutes);
 app.use("/api/tweets", tweetRoutes);
 app.use("/api/notification", notifyRoutes);
 
-if (process.env.NODE_ENV === "production") {
-	app.use(express.static(path.join(__dirname, "/frontend/dist")));
-
-	app.get("*", (req, res) => {
-		res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
-	});
-}
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
