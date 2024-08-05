@@ -1,5 +1,5 @@
-import path from "path";
 import dotenv from "dotenv";
+import path from 'path'
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -39,6 +39,7 @@ if (process.env.NODE_ENV === "production") {
     res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
   });
 }
+
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
